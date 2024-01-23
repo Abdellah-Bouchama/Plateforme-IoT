@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "device",
+			"path": "../pycom-libraries-master/examples/pytrack_pysense_accelerometer/device"
+		},
+		{
+			"name": "serial:/COM8",
+			"uri": "serial://com8/flash"
+		},
+		{
+			"name": "IoT Plateform project",
+			"path": "."
+		}
+	]
+}
