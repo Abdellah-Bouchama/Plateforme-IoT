@@ -1,13 +1,12 @@
-import machine
-import math
 import network
-import os
-import pycom
-import time, utime
+
+
 import socket
-import struct, ubinascii
-import gc
 import sys
+import lib.config as configuration
+from lib.pytrack import Pytrack
+
+import time
 
 
 
@@ -18,40 +17,22 @@ from lib.pycoproc_2 import Pycoproc
 from lib.wifi_manager import WifiManager
 from lib.bluetooth_manager import BluetoothManager
 
-#Initialisation 
-pycom.heartbeat(False)
-pycom.rgbled(0x0A0A08)
 
-gc.enable() #Enabeling the garbage collector
+node_ip = "10.2.29.150"
+setup = configuration.Configure(node_ip)
+py = Pytrack()
+l76 = L76GNSS(py, timeout=30, buffer=512)
+pybates_enabled = False
 
-#RTC setting
-rtc = machine.RTC()
-rtc.ntp_sync("pool.ntp.org")
-utime.sleep_ms(750)
-print("\n RTC set from NTP to UTC : {}".format(rtc.now()))
-utime.timezone(7200)
-print('Adjusted from UTC to EST timezone', utime.localtime(), '\n')
-print('Device MAC adress :',ubinascii.hexlify(machine.unique_id()))
+if 'pybytes' in globals():
+    print("pybytes found !!")
+    if (pybytes.isconnected()):
+        print('pybytes is connected')
+        pybates_enabled = True
 
+else :
+    print("pybytes not found !!")
 
-
-
-#Device check
-py = Pycoproc()
-if py.read_product_id() != Pycoproc.USB_PID_PYTRACK:
-    raise Exception("This device is not a pytrack !!")
-
-# l76 = L76GNSS(py, timeout=30, buffer=512)
-
-# pybates_enabled = False
-# if 'pybytes' in globals():
-#     print("pybytes found !!")
-#     if (pybytes.isconnected()):
-#         print('pybytes is connected')
-#         pybates_enabled = True
-
-# else :
-#     print("pybytes not found !!")
 
 """ 
     Attention : Pybytes is not found
@@ -61,36 +42,6 @@ if py.read_product_id() != Pycoproc.USB_PID_PYTRACK:
 """
     Add coordinates storage on SD
 """
-
-#------------------WIFI----------------------#
-# SSID = 'HUAWEI P30'
-
-# wlanSTA = network.WLAN(mode=network.WLAN.STA)
-# wlanSTA.connect(SSID, auth=(network.WLAN.WPA2, 'abd12345678'))
-# timeout = time.time() + 5 # Wait 30 seconds for connexion binding
-# while not wlanSTA.isconnected():
-#     if time.time()> timeout :
-#         break
-#     time.sleep_ms(500)
-#     print("Waiting for connection to wifi")
-
-# if wlanSTA.isconnected():
-#     print("we are connected to wifi {}".format(SSID))
-#     print("confirguration \n", wlanSTA.ifconfig())
-
-# #Create an access point 
-# AP_SSID = "FiPyAP "
-# AP_password = "12345678"
-# wlanAP = network.WLAN(network.WLAN.AP)
-# wlanAP.init(mode =network.WLAN.AP, ssid =AP_SSID, auth = (network.WLAN.WPA2, AP_password))
-# #Waiting for clients to be connected on the AP
-
-# while not ap.isconnected():
-#     print("Actvating {} access point on the fipy please wait".format(AP_SSID))
-
-# time.sleep_ms(3)
-# print("Braodcasting AP signal on {}".format(AP_SSID))
-# print(wlanAP.ifconfig())
 
 
 #--------------------Connecting to a bluetooth boradcaster-------------------------#
@@ -138,16 +89,20 @@ if py.read_product_id() != Pycoproc.USB_PID_PYTRACK:
 #         time.sleep(1)
 
 try : 
-    wlan_sta = network.WLAN(mode=network.WLAN.STA)
-    wm = WifiManager()
-    wm.wifi_connect('OPPO Reno10 5G', 'r3nfqaz6')
-    wm.ipV4_config('192.168.46.88', '255.255.255.0', '192.168.46.216', '192.168.46.216')
-    print('After config {}'.format(wm.get_address()))
-    wm.check_status()
+    #wlan_sta = network.WLAN(mode=network.WLAN.STA)
+    #wm = WifiManager(ssid = 'WifiManager', password = 'wifimanager')
+    #wm.wifi_connect('OPPO Reno10 5G', 'r3nfqaz6')
+    #wm.ipV4_config(setup.ip_address, configuration.NET_MASK, configuration.GATEWAY, configuration.DNS_SERVER)
+    #print('After config {}'.format(wm.get_address()))
+    #wm.ap_broadcast()
+    #wm.check_status()
+
+    blue = BluetoothManager(mode='client')
 
 
-    bt_adv = BluetoothManager()
-    bt_adv.scan_devices(100)
+
+    #bt_adv = BluetoothManager()
+    #bt_adv.scan_devices(100)
     #bt_adv.advertise()
 
 except KeyboardInterrupt:

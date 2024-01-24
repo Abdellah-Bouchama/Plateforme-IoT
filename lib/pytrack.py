@@ -21,48 +21,12 @@ from machine import SD
 from L76GNSS import L76GNSS
 from pycoproc_2 import Pycoproc
 
-pycom.heartbeat(False)
-pycom.rgbled(0x0A0A08) # white
 
-time.sleep(2)
-gc.enable()
 
-# setup rtc
-rtc = machine.RTC()
-rtc.ntp_sync("pool.ntp.org")
-utime.sleep_ms(750)
-print('\nRTC Set from NTP to UTC:', rtc.now())
-utime.timezone(7200)
-print('Adjusted from UTC to EST timezone', utime.localtime(), '\n')
 
-py = Pycoproc()
-if py.read_product_id() != Pycoproc.USB_PID_PYTRACK:
-    raise Exception('Not a Pytrack')
+__version__ = '1.4.0'
 
-time.sleep(1)
-l76 = L76GNSS(py, timeout=30, buffer=512)
+class Pytrack(Pycoproc):
 
-pybytes_enabled = False
-if 'pybytes' in globals():
-    if(pybytes.isconnected()):
-        print('Pybytes is connected, sending signals to Pybytes')
-        pybytes_enabled = True
-
-# sd = SD()
-# os.mount(sd, '/sd')
-# f = open('/sd/gps-record.txt', 'w')
-
-while (True):
-    coord = l76.coordinates()
-    #f.write("{} - {}\n".format(coord, rtc.now()))
-    print("{} - {} - {}".format(coord, rtc.now(), gc.mem_free()))
-    if(pybytes_enabled):
-        pybytes.send_signal(1, coord)
-    time.sleep(10)
-
-"""
-# sleep procedure
-time.sleep(3)
-py.setup_sleep(10)
-py.go_to_sleep()
-"""
+    def __init__(self, i2c=None, sda='P22', scl='P21'):
+        Pycoproc.__init__(self, i2c, sda, scl)

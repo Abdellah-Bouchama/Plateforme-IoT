@@ -9,11 +9,14 @@ import socket
 import re
 import time
 import lib.logging as logger
+import lib.config as config
 
+
+WMASSAGE_PERIOD = const(5)
 
 class WifiManager:
 
-    def __init__(self, ssid = 'WifiManager', password = 'wifimanager', reboot = True, debug = False):
+    def __init__(self, ssid = config.WIFI_SSID, password = config.WIFI_PW, reboot = True):
         self.wlan_sta = network.WLAN(mode=network.WLAN.STA)
         self.wlan_ap = network.WLAN(network.WLAN.AP)
         
@@ -48,10 +51,11 @@ class WifiManager:
         # Useful if you're having problems with web server applications after WiFi configuration.
         self.reboot = reboot
         
-        self.debug = debug
+        
         self.logger = logger
 
 
+    #Connect to one of already known connections
     def connect(self):
         if self.wlan_sta.isconnected():
             return
@@ -68,7 +72,7 @@ class WifiManager:
         
     
     def disconnect(self):
-        if self.wlan_sta.isconnected():
+        if self.is_connected():
             self.wlan_sta.disconnect()
 
 
@@ -101,8 +105,6 @@ class WifiManager:
             with open(self.wifi_credentials) as file:
                 lines = file.readlines()
         except Exception as error:
-            if self.debug:
-                print(error)
             pass
         profiles = {}
         for line in lines:
@@ -111,12 +113,19 @@ class WifiManager:
         return profiles
 
 
-    def wifi_connect(self, ssid, password):
+    def wifi_connect(self, ssid, password, timeout):
         print('Trying to connect to:', ssid)
         self.wlan_sta.connect(ssid, auth=(network.WLAN.WPA2, password))
-        for _ in range(100):
+        #for _ in range(100):
+        waiting_deadline = time.time() + timeout ## Wait <timeout> seconds for connexion binding
+        while not self.wlan_sta.isconnected():
+            if time.time()> waiting_deadline :
+                self.logger.warning("Not connected to network, binding timed out")
+                break
+            time.sleep_ms(500)
+            print("Waiting for connection to wifi")
             if self.wlan_sta.isconnected():
-                print('\nConnected! Network information:', self.get_address())
+                print('\nConnected to wifi {} Network information:{}'.format(ssid, self.get_address()))
                 self.ssid = ssid
                 return True
             else:
@@ -126,10 +135,26 @@ class WifiManager:
         self.wlan_sta.disconnect()
         return False
 
+    def ap_broadcast(self):
+
+        
+        self.wlan_ap.init(mode =network.WLAN.AP, ssid =self.ap_ssid, auth = (network.WLAN.WPA2, self.ap_password))
+        #Waiting for clients to be connected on the AP
+        print("Actvating {} access point on the fipy please wait".format(self.ap_ssid))
+        last_print_time = time.time()
+        while not self.wlan_ap.isconnected():
+            current_time = time.time()
+            if current_time - last_print_time >= WMASSAGE_PERIOD:
+                print("Still waiting... Please wait for client...")
+                last_print_time = current_time
+            
+        self.logger.info("Client connected")
+        print("Braodcasting AP signal on {}".format(self.ap_ssid))
+        print(self.wlan_ap.ifconfig())
     
     def web_server(self):
-        self.wlan_ap.active(True)
-        self.wlan_ap.config(essid = self.ap_ssid, password = self.ap_password, authmode = self.ap_authmode)
+        #self.wlan_ap.active(True)
+        self.wlan_ap.init(mode =network.WLAN.AP, ssid =self.ap_ssid, auth = (network.WLAN.WPA2, self.ap_password))
         server_socket = socket.socket()
         server_socket.close()
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -157,12 +182,8 @@ class WifiManager:
                         self.request += self.client.recv(128)
                 except Exception as error:
                     # It's normal to receive timeout errors in this stage, we can safely ignore them.
-                    if self.debug:
-                        print(error)
                     pass
                 if self.request:
-                    if self.debug:
-                        print(self.url_decode(self.request))
                     url = re.search('(?:GET|POST) /(.*?)(?:\\?.*?)? HTTP', self.request).group(1).decode('utf-8').rstrip('/')
                     if url == '':
                         self.handle_root()
@@ -171,8 +192,6 @@ class WifiManager:
                     else:
                         self.handle_not_found()
             except Exception as error:
-                if self.debug:
-                    print(error)
                 return
             finally:
                 self.client.close()
@@ -304,8 +323,6 @@ class WifiManager:
                 appnd(char)
                 appnd(item[2:])
             except Exception as error:
-                if self.debug:
-                    print(error)
                 appnd(b'%')
                 appnd(item)
 

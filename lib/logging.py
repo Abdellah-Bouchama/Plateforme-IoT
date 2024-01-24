@@ -10,7 +10,7 @@ INFO = const(20)
 DEBUG = const(10)
 NOTSET = const(0)
 
-_DEFAULT_LEVEL = const(WARNING)
+_DEFAULT_LEVEL = const(INFO)
 
 _level_dict = {
     CRITICAL: "CRITICAL",
