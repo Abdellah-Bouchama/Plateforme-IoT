@@ -21,28 +21,7 @@ import lib.bluetooth_manager as BTMANAGER
 
 node_ip = "10.2.29.150"
 setup = configuration.Configure(node_ip)
-# py = Pytrack()
-# l76 = L76GNSS(py, timeout=30, buffer=512)
-# pybates_enabled = False
 
-# if 'pybytes' in globals():
-#     print("pybytes found !!")
-#     if (pybytes.isconnected()):
-#         print('pybytes is connected')
-#         pybates_enabled = True
-
-# else :
-#     print("pybytes not found !!")
-
-
-""" 
-    Attention : Pybytes is not found
-"""
-
-
-"""
-    Add coordinates storage on SD
-"""
 
 
 
@@ -64,6 +43,8 @@ setup = configuration.Configure(node_ip)
 #         print("These are coordinates : {}".format(coord, gc.mem_free()))
 
 #         time.sleep(1)
+
+#--------------------End Accelerometre-----------------------#
 
 try : 
     #wlan_sta = network.WLAN(mode=network.WLAN.STA)

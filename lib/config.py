@@ -2,6 +2,8 @@ import pycom
 import machine
 import time, utime
 import logging
+from lib.pytrack import Pytrack
+import L76GNSS
 import gc
 from lib.pycoproc_2 import Pycoproc
 from micropython import const
@@ -54,3 +56,29 @@ class Configure :
         if py.read_product_id() != Pycoproc.USB_PID_PYTRACK:
             self.logger.CRITICAL("This device was not recognized as a Pytrack device")
             raise Exception("This device is not a pytrack device!!")
+        
+
+
+    def pybyte_check(self):
+        py = Pytrack()
+        l76 = L76GNSS(py, timeout=30, buffer=512)
+        pybates_enabled = False
+
+        if 'pybytes' in globals():
+            print("pybytes found !!")
+            if (pybytes.isconnected()):
+                print('pybytes is connected')
+                pybates_enabled = True
+
+        else :
+            print("pybytes not found !!")
+
+
+        """ 
+            Attention : Pybytes is not found
+        """
+
+
+        """
+            Add coordinates storage on SD
+        """

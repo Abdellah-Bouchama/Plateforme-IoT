@@ -1,5 +1,6 @@
 from network import Bluetooth
 import ubinascii
+import LIS2HH12
 
 
 import lib.logging as logger
@@ -30,17 +31,68 @@ class BluetoothManager:
         if mode == BT_CLIENT_MODE :
             self.scan_devices()
             
-        # srv1 = self.bt.service(uuid=0xec00, isprimary=True,nbr_chars=1)
-        # chr1 = srv1.characteristic(uuid=0xec0e, value='read_from_here') #client reads from here
-        # chr1.callback(trigger=Bluetooth.CHAR_READ_EVENT, handler=self.chr1_handler)  # Déclencheur pour l'événement de lecture
-        # chr1.callback(trigger=Bluetooth.CHAR_SUBSCRIBE_EVENT, handler=self.chr1_handler)  # Déclencheur pour l'événement de souscription
-        # chr1.callback(trigger=(Bluetooth.CHAR_READ_EVENT | Bluetooth.CHAR_SUBSCRIBE_EVENT), handler=self.chr1_handler)
 
     # Broadcast for a bleutooth access
     def advertise(self,name = "FiPy", password = "1234567890"):
         self.bt.set_advertisement(name=name, manufacturer_data="Pycom", service_uuid=0xec00)
         self.bt.callback(trigger=self.bt.CLIENT_CONNECTED | self.bt.CLIENT_DISCONNECTED, handler=self.connexion_callback)
         self.bt.advertise(True)
+        self.send_data()
+    # --------------------------------------------------------------------#
+    #  ------------------ Balsam's code -------------------------------#
+    # --------------------------------------------------------------------#
+    def send_data(self):
+        srv1 = self.bt.service(uuid=0xec00, isprimary=True,nbr_chars=1)
+
+        chr1 = srv1.characteristic(uuid=0xec0e, value='read_from_here') #client reads from here
+        while(True):
+
+            try:
+                chr1.callback(trigger=(Bluetooth.CHAR_READ_EVENT | Bluetooth.CHAR_SUBSCRIBE_EVENT), handler=self.chr1_handler)
+                time.sleep(10)
+            except:
+                self.bt.callback(trigger=0)
+
+    def chr1_handler(self, chr, data):
+        global k,cx
+        nodeId = 4001
+        #nodeId=4
+        MasterId=1001
+        accelerometer = LIS2HH12()
+        acceleration = accelerometer.acceleration()
+        nomData="acceleration"
+        idData=1
+        var={"X":acceleration[0],"Y":acceleration[1],"Z":acceleration[2]}
+        #t=utime.time()
+        cx=0
+        data=""
+        if (k==1):
+            print("Acceleration: X = {}, Y = {}, Z = {}".format(acceleration[0], acceleration[1], acceleration[2]))
+            #data=bytes([MasterId])+ "*"+bytes([nodeId])+"*"+str(t)+"*"+"Acceleration: X = {}, Y = {}, Z = {}".format(acceleration[0], acceleration[1], acceleration[2])
+            data=str(MasterId)+"*"+str(nodeId)+"*"+self.dataconstract(nomData,idData,var)
+            #k=0
+        else:
+            data=str(nodeId)+"*"+"hello master"
+            k=1
+
+        if (Bluetooth.CHAR_READ_EVENT | Bluetooth.CHAR_SUBSCRIBE_EVENT):
+            try:    
+                print("message envoyé : ",data)
+                chr.value(data)
+                cx=0
+            except:
+                cx=cx+1
+        else:
+            cx=cx+1
+
+    def dataconstract (self, nom,idData,var):
+        data=nom+"*"+str(idData)
+        for v in var.keys():
+            data=data+"*"+v+"*"+str(var[v])
+        return(data)
+     # --------------------------------------------------------------------#
+     #  ------------------ END Balsam's code -------------------------------#
+     # --------------------------------------------------------------------#
 
     #Scan available broadcasting bluetooth devices
     def scan_devices(self):
