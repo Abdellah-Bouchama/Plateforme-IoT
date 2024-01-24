@@ -16,22 +16,23 @@ from lib.LIS2HH12 import LIS2HH12 #Accelerometre
 from lib.pycoproc_2 import Pycoproc
 from lib.wifi_manager import WifiManager
 from lib.bluetooth_manager import BluetoothManager
+import lib.bluetooth_manager as BTMANAGER
 
 
 node_ip = "10.2.29.150"
 setup = configuration.Configure(node_ip)
-py = Pytrack()
-l76 = L76GNSS(py, timeout=30, buffer=512)
-pybates_enabled = False
+# py = Pytrack()
+# l76 = L76GNSS(py, timeout=30, buffer=512)
+# pybates_enabled = False
 
-if 'pybytes' in globals():
-    print("pybytes found !!")
-    if (pybytes.isconnected()):
-        print('pybytes is connected')
-        pybates_enabled = True
+# if 'pybytes' in globals():
+#     print("pybytes found !!")
+#     if (pybytes.isconnected()):
+#         print('pybytes is connected')
+#         pybates_enabled = True
 
-else :
-    print("pybytes not found !!")
+# else :
+#     print("pybytes not found !!")
 
 
 """ 
@@ -43,30 +44,6 @@ else :
     Add coordinates storage on SD
 """
 
-
-#--------------------Connecting to a bluetooth boradcaster-------------------------#
-
-# bt = network.Bluetooth()
-# bt.start_scan(-1)
-
-# try :
-#     print("Detecting nearby bleutooth networks")
-#     while True :
-#         adv = bt.get_adv()
-#         if adv : 
-#             name = bt.resolve_adv_data(adv.data, network.Bluetooth.ADV_NAME_CMPL)
-            
-#             if name!= None:
-#                 print('adv name',name )
-#                 time.sleep(3)
-#         if adv and bt.resolve_adv_data(adv.data, network.Bluetooth.ADV_NAME_CMPL) =='OPPO Reno10 5G':
-#             print('if')
-#             rssi = adv.rssi
-#             print("RSSI : {}".format(rssi))
-# except KeyboardInterrupt:
-#     print('Interrepted')
-# except Exception as e:
-#     print('Another Exception {}'.format(e))
 
 
 
@@ -97,7 +74,11 @@ try :
     #wm.ap_broadcast()
     #wm.check_status()
 
-    blue = BluetoothManager(mode='client')
+    blue = BluetoothManager(mode=BTMANAGER.BT_CLIENT_MODE)
+    connected = blue.bind('FiPy')
+    if connected :
+        while True : 
+            blue.read_data()
 
 
 
@@ -106,7 +87,7 @@ try :
     #bt_adv.advertise()
 
 except KeyboardInterrupt:
-    print('Interrepted')
+    print('Interrepted by keyboard')
 except Exception as e:
-    print('Another Exception {}'.format(e))
+    print('Another Exception given by {}'.format(e))
     print(sys.exc_info()[2])

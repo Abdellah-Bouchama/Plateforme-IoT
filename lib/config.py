@@ -5,6 +5,8 @@ import logging
 import gc
 from lib.pycoproc_2 import Pycoproc
 from micropython import const
+import ubinascii
+
 
 
 
@@ -16,7 +18,7 @@ SERVER_IP = "10.2.30.158"
 NET_MASK = "255.255.0.0"
 GATEWAY = "10.2.1.1"
 DNS_SERVER = "10.2.1.1"
-BLUETOOTH_MODES = ['CLIENT', 'ADVERTIZER']
+
 
 
 class Configure :
@@ -26,8 +28,12 @@ class Configure :
     def __init__(self, ip_address):
 
         self.logger = logging
+        self.logger.basicConfig(level=logging.INFO)
         self.ip_address = ip_address 
 
+        #Printing MAC and ip addresses to identify
+        self.logger.info("This device MAC address is {}".format(ubinascii.hexlify(machine.unique_id(),':').decode()))
+        self.logger.info("This device IP address is {}".format(self.ip_address))
 
         #Initialisation 
         pycom.heartbeat(False)
