@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "BLE_SERVER",
+			"path": "."
+		},
+		{
+			"name": "BLE_CLIENT",
+			"path": "../BLE_CLIENT"
+		}
+	],
+	"settings": {}
+}
