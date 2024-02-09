@@ -3,6 +3,18 @@
 		{
 			"name": "IOTP_WS",
 			"path": "."
+		},
+		{
+			"name": "WIFI_SERVER",
+			"path": "WIFI_WS/WIFI_SERVER"
+		},
+		{
+			"name": "WIFI_CLIENT",
+			"path": "WIFI_WS/WIFI_CLIENT"
+		},
+		{
+			"name": "serial:/COM7",
+			"uri": "serial://com7/flash"
 		}
 	]
 }

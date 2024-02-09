@@ -158,6 +158,8 @@ class BluetoothManager:
               for char in chars:
                   if (char.properties() & Bluetooth.PROP_READ):
                       print('char {} value = {}'.format(char.uuid(), char.read()))
+                      if (char.properties() & Bluetooth.PROP_NOTIFY):
+                            char.callback(trigger=Bluetooth.CHAR_NOTIFY_EVENT, handler=self.char_notify_callback)
         else :
             raise ("Could not read data, no conection found!")
     
@@ -207,7 +209,9 @@ class BluetoothManager:
 
 
 
-
+    def char_notify_callback(self, char, arg):
+        char_value = (char.value())
+        print("New value: {}".format(char_value))
 
 
 

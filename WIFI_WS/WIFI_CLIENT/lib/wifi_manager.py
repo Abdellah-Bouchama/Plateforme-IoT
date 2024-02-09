@@ -13,6 +13,7 @@ import lib.config as config
 
 
 WMASSAGE_PERIOD = const(5)
+WIFI_CONN_TIMEOUT = const(15)
 
 class WifiManager:
 
@@ -41,7 +42,8 @@ class WifiManager:
         
         # The file were the credentials will be stored.
         # There is no encryption, it's just a plain text archive. Be aware of this security problem!
-        self.ssid = ''
+        self.ssid = ssid
+        self.password = password
         self.wifi_credentials = 'wifi.dat'
         
         # Prevents the device from automatically trying to connect to the last saved network without first going through the steps defined in the code.
@@ -113,7 +115,7 @@ class WifiManager:
         return profiles
 
 
-    def wifi_connect(self, ssid, password, timeout):
+    def wifi_connect(self, ssid , password, timeout = WIFI_CONN_TIMEOUT):
         print('Trying to connect to:', ssid)
         self.wlan_sta.connect(ssid, auth=(network.WLAN.WPA2, password))
         #for _ in range(100):
@@ -125,7 +127,10 @@ class WifiManager:
             time.sleep_ms(500)
             print("Waiting for connection to wifi")
             if self.wlan_sta.isconnected():
-                print('\nConnected to wifi {} Network information:{}'.format(ssid, self.get_address()))
+                print('\nConnected to wifi {} '.format(ssid))
+                print('\nConfiguring ipV4 ')
+                #self.ipV4_config(config.NODE_IP, config.NET_MASK, config.GATEWAY, config.DNS_SERVER)
+                print('\n Network information:{}'.format(self.get_address()))
                 self.ssid = ssid
                 return True
             else:
@@ -331,3 +336,43 @@ class WifiManager:
     def ipV4_config(self, ip, subnet, gateway, dns):
 
         self.wlan_sta.ifconfig(config=(ip, subnet, gateway, dns))
+
+    
+
+    def send_msg(self):
+        print("Sending message via socket")
+        try:
+                    print('1')
+                    sock = socket.socket()
+                    print('1')
+                    sock.connect((config.GATEWAY_IP, 5000))
+                    print('1')
+                    #print(wlan.ifconfig())
+                    #print("connectee")
+                    msg=str(config.NODE_ID)+"*"+"hello wifi"
+                    print('1')
+                    sock.send(msg.encode('utf-8'))
+                    print("message envoyé",msg)
+        except Exception as e:
+
+            print(e)
+
+    def recieve_msg(self):
+        
+        recieved = False
+        while (not recieved):
+            try:
+                        sock = socket.socket()
+                        sock.connect((config.SERVER_IP, 5000))
+                        d = sock.recv(1024)
+                        l=d.decode('utf-8').split("*")
+                        
+                        src_id=eval(l[0])
+                        #print("src_id",src_id)
+                        if(src_id==0):
+                                print("message reçu",d)
+                                recieved = True
+                        else :
+                            print("Not recieved yet ... waiting")
+            except Exception as e :
+                print(e)
