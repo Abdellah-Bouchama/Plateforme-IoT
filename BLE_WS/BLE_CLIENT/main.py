@@ -56,10 +56,8 @@ try :
     #wm.check_status()
 
     blue = BluetoothManager(mode=BTMANAGER.BT_CLIENT_MODE)
-    connected = blue.bind('FiPy')
-    if connected :
-        while True : 
-            blue.read_data()
+    #connected = blue.bind('FiPy')
+   
 
 
 
@@ -70,5 +68,5 @@ try :
 except KeyboardInterrupt:
     print('Interrepted by keyboard')
 except Exception as e:
-    print('Another Exception given by {}'.format(e))
+    print('Another Exception given by : {}'.format(e))
     print(sys.exc_info()[2])
