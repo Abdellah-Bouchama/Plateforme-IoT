@@ -56,7 +56,8 @@ try :
 
     wm = WifiManager()
     wm.ap_broadcast()
-    wm.recieve_msg()
+    #wm.open_socket()
+    # wm.recieve_msg()
 
     
   

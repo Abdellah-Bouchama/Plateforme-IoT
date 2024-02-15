@@ -16,7 +16,8 @@ from lib.L76GNSS import L76GNSS #Localsiation
 from lib.LIS2HH12 import LIS2HH12 #Accelerometre
 from lib.pycoproc_2 import Pycoproc
 from lib.wifi_manager import WifiManager
-
+import lib.wifi_manager as wifi_manager
+import lib.uping as ping
 
 node_ip = "10.2.18.125"
 setup = configuration.Configure(node_ip)
@@ -46,17 +47,14 @@ setup = configuration.Configure(node_ip)
 #--------------------End Accelerometre-----------------------#
 
 try : 
-    # wlan_sta = network.WLAN(mode=network.WLAN.STA)
-    # wm = WifiManager(ssid = 'WifiManager', password = 'wifimanager')
-    # wm.wifi_connect('OPPO Reno10 5G', 'r3nfqaz6')
-    # wm.ipV4_config(setup.ip_address, configuration.NET_MASK, configuration.GATEWAY, configuration.DNS_SERVER)
-    # print('After config {}'.format(wm.get_address()))
-    # wm.ap_broadcast()
-    # wm.check_status()
 
     wm = WifiManager(ssid="OPPO", password="123456789azerty")
-    wm.wifi_connect(ssid="OPPO", password="123456789azerty")
-    wm.send_msg()
+    wm.wifi_connect(ssid="OPPO", password="123456789azerty", timeout=14)
+    ping.ping("192.168.79.245")
+    ping.ping("192.168.79.137")
+    wm.open_socket('192.168.79.39')
+    #wm.send_mssg()
+    
 
     
   

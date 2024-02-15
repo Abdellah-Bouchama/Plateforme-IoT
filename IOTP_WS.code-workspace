@@ -3,10 +3,6 @@
 		{
 			"name": "IOTP_WS",
 			"path": "."
-		},
-		{
-			"name": "serial:/COM7",
-			"uri": "serial://com7/flash"
 		}
 	]
 }

@@ -25,20 +25,15 @@ class WifiManager:
         # Avoids simple mistakes with wifi ssid and password lengths, but doesn't check for forbidden or unsupported characters.
         if len(ssid) > 32:
             raise Exception('The SSID cannot be longer than 32 characters.')
-            print("11")
         else:
             self.ap_ssid = ssid
-            print("1")
         if len(password) < 8:
             raise Exception('The password cannot be less than 8 characters long.')
-            print("11")
         else:
             self.ap_password = password
-            print("1")
             
         # Set the access point authentication mode to WPA2-PSK.
         self.ap_authmode = 3
-        print("1")
         
         # The file were the credentials will be stored.
         # There is no encryption, it's just a plain text archive. Be aware of this security problem!
@@ -128,7 +123,7 @@ class WifiManager:
             print("Waiting for connection to wifi")
             if self.wlan_sta.isconnected():
                 print('\nConnected to wifi {} '.format(ssid))
-                print('\nConfiguring ipV4 ')
+                #print('\nConfiguring ipV4 ')
                 #self.ipV4_config(config.NODE_IP, config.NET_MASK, config.GATEWAY, config.DNS_SERVER)
                 print('\n Network information:{}'.format(self.get_address()))
                 self.ssid = ssid
@@ -139,6 +134,48 @@ class WifiManager:
         print('\nConnection failed!')
         self.wlan_sta.disconnect()
         return False
+    
+    def open_socket(self, socket_server_ip):
+
+        packet = None
+        sock = None
+
+        try:    
+            print('ceating socket...')
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print('should block here')
+            sock.setblocking(True)
+
+            if (sock !=None):
+                print('binding...')
+                sock.bind((socket_server_ip, 5000))
+                print('listerning...')
+                sock.listen(1)
+                while (True):  ######### A Revoir cette condition ######
+                    print('in while...')
+                    try :
+                        socket_client, client_addr = sock.accept()
+                        if client_addr :
+                            print("client connected having {} as IP address ".format(client_addr))
+                            packet = socket_client.recv(1024)
+                        else:
+                            print("Client not connected yet")
+                            continue
+                        if packet:
+                            packet_decode = packet.decode('utf-8').split("*")
+                            sender_id = eval(packet_decode[0])
+                            message = eval(packet_decode[1])
+                            print("Recieved message from {} saying : {}".format(sender_id, message))
+                    except Exception as e:
+                        print(e)
+                        pass
+
+
+            else:
+                print("SOCK==NONE")
+
+        except:
+            print("exception intry")
 
     def ap_broadcast(self):
 
@@ -339,13 +376,13 @@ class WifiManager:
 
     
 
-    def send_msg(self):
+    def send_mssg(self, socketIP):
         print("Sending message via socket")
         try:
                     print('1')
                     sock = socket.socket()
-                    print('1')
-                    sock.connect((config.GATEWAY_IP, 5000))
+                    print('Connecting to {}'.format(socketIP))
+                    sock.connect(('192.168.79.39', 5000))
                     print('1')
                     #print(wlan.ifconfig())
                     #print("connectee")

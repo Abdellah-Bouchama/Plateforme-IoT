@@ -16,11 +16,11 @@ import ubinascii
 NTP_SERVER = "pool.ntp.org" # Or 10.12.10.134
 WIFI_SSID = "OPPO" #"dragino-227e3c"
 WIFI_PW = "123456789azerty" #"dragino+dragino"
-GATEWAY_IP = "192.168.234.193" #"10.2.30.158"
-NODE_IP = "192.168.1.11" #"10.2.18.125"
+GATEWAY_IP = "192.168.1.1" #"10.2.30.158"
+NODE_IP = "192.168.1.15" #"10.2.18.125"
 NODE_ID = 1
 NET_MASK = "255.255.255.0" #"255.255.0.0"
-GATEWAY = "192.168.234.114" #"10.2.1.1"
+GATEWAY = "192.168.1.1" #"10.2.1.1"
 DNS_SERVER = "8.8.8.8" #"10.2.1.1"
 
 
