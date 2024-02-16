@@ -3,6 +3,7 @@
 		{
 			"name": "IOTP_WS",
 			"path": "."
+<<<<<<< HEAD
 		},
 		{
 			"name": "WIFI_SERVER",
@@ -19,6 +20,8 @@
 		{
 			"name": "serial:/COM6",
 			"uri": "serial://com6/flash"
+=======
+>>>>>>> de24d1d1802ae42fca2bbd243888533487b235f5
 		}
 	]
 }
