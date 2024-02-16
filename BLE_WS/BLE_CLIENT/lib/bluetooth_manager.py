@@ -76,7 +76,7 @@ class BluetoothManager:
 
                 self.conn = self.bt.connect(select_adv.mac)  
                 print("Connected to device {} with mac addresse = {}".format(adv_name, ubinascii.hexlify(select_adv.mac)))  
-                _thread.start_new_thread(setup._setblueledblink, (0.3))
+                #_thread.start_new_thread(setup._setblueledblink, (0.3))
                 break
             except KeyboardInterrupt:
                 print('Interrepted by keyboard')   
