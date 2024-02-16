@@ -349,6 +349,48 @@ class WifiManager:
 
             print(e)
 
+    def open_socket(self):
+
+        packet = None
+        sock = None
+
+        try:    
+            print('ceating socket...')
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print('should block here')
+            sock.setblocking(True)
+
+            if (sock !=None):
+                print('binding...')
+                sock.bind((config.SERVER_IP, 5000))
+                print('listerning...')
+                sock.listen(1)
+                while (True):  ######### A Revoir cette condition ######
+                    print('in while...')
+                    try :
+                        socket_client, client_addr = sock.accept()
+                        if client_addr :
+                            print("client connected having {} as IP address ".format(client_addr))
+                            packet = socket_client.recv(1024)
+                        else:
+                            print("Client not connected yet")
+                            continue
+                        if packet:
+                            packet_decode = packet.decode('utf-8').split("*")
+                            sender_id = eval(packet_decode[0])
+                            message = eval(packet_decode[1])
+                            print("Recieved message from {} saying : {}".format(sender_id, message))
+                    except Exception as e:
+                        print(e)
+                        pass
+
+
+            else:
+                print("SOCK==NONE")
+
+        except:
+            print("exception intry")
+
     def recieve_msg(self):
         recieved = False
         while (not recieved):
