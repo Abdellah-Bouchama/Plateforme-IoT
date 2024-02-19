@@ -50,19 +50,13 @@ setup = configuration.Configure(node_ip)
 try : 
 
     wm = WifiManager(ssid="OPPO", password="123456789azerty")
-    wm.ap_broadcast()
-    wm.ipV4_config("192.168.4.1", "255.255.255.0", "192.168.4.1", "192.168.4.1")
-    #wm.wifi_connect(ssid="OPPO", password="123456789azerty", timeout=14)
+    wm.wifi_connect(ssid="OPPO", password="123456789azerty", timeout=14)
     print("\n Network information:{}".format(wm.wlan_ap.ifconfig()))
     ping.ping("192.168.4.1")
     print('starting thread for sockets')
-    _thread.start_new_thread(wm.open_socket, ('192.168.4.1',))
-    #_thread.start_new_thread(wm.send_mssg, ('192.168.4.1',))
-    print("----------Thread started and continueing--------------")
-    client = MQTTClient("client_id", "10.2.29.145", port=1883, user=None, password=None, keepalive = 50000 , ssl=False, ssl_params={})
-    #client = MQTTClient("client_id", SERVER_IP, port=1883, user=None, password=None, keepalive = 500 , ssl=False, ssl_params={})
-    client.connect()
-
+    _thread.start_new_thread(wm.send_mssg, ('192.168.4.1',))
+    print("----------Thread started and continueing going to bluetooth--------------")
+    
 
 except KeyboardInterrupt:
     print('Interrepted by keyboard')

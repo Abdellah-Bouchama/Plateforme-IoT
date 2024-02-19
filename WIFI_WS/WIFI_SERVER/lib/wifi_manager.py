@@ -13,11 +13,11 @@ import lib.config as config
 
 
 WMASSAGE_PERIOD = const(5)
-WIFI_CONN_TIMEOUT = const(5)
+WIFI_CONN_TIMEOUT = const(15)
 
 class WifiManager:
 
-    def __init__(self, ssid = config.WIFI_SSID, password = config.WIFI_PW, reboot = True):
+    def __init__(self, ssid = config.WIFI_SSID, password = config.WIFI_PW, reboot = False):
         self.wlan_sta = network.WLAN(mode=network.WLAN.STA)
         self.wlan_ap = network.WLAN(network.WLAN.AP)
         
@@ -25,24 +25,20 @@ class WifiManager:
         # Avoids simple mistakes with wifi ssid and password lengths, but doesn't check for forbidden or unsupported characters.
         if len(ssid) > 32:
             raise Exception('The SSID cannot be longer than 32 characters.')
-            print("11")
         else:
             self.ap_ssid = ssid
-            print("1")
         if len(password) < 8:
             raise Exception('The password cannot be less than 8 characters long.')
-            print("11")
         else:
             self.ap_password = password
-            print("1")
             
         # Set the access point authentication mode to WPA2-PSK.
         self.ap_authmode = 3
-        print("1")
         
         # The file were the credentials will be stored.
         # There is no encryption, it's just a plain text archive. Be aware of this security problem!
-        self.ssid = ''
+        self.ssid = ssid
+        self.password = password
         self.wifi_credentials = 'wifi.dat'
         
         # Prevents the device from automatically trying to connect to the last saved network without first going through the steps defined in the code.
@@ -51,6 +47,9 @@ class WifiManager:
         # Change to True if you want the device to reboot after configuration.
         # Useful if you're having problems with web server applications after WiFi configuration.
         self.reboot = reboot
+
+
+        self.sock = None
         
         
         self.logger = logger
@@ -114,7 +113,7 @@ class WifiManager:
         return profiles
 
 
-    def wifi_connect(self, ssid = config.WIFI_SSID, password = config.WIFI_PW, timeout = WIFI_CONN_TIMEOUT):
+    def wifi_connect(self, ssid , password, timeout = WIFI_CONN_TIMEOUT):
         print('Trying to connect to:', ssid)
         self.wlan_sta.connect(ssid, auth=(network.WLAN.WPA2, password))
         #for _ in range(100):
@@ -126,7 +125,10 @@ class WifiManager:
             time.sleep_ms(500)
             print("Waiting for connection to wifi")
             if self.wlan_sta.isconnected():
-                print('\nConnected to wifi {} Network information:{}'.format(ssid, self.get_address()))
+                print('\nConnected to wifi {} '.format(ssid))
+                #print('\nConfiguring ipV4 ')
+                #self.ipV4_config(config.NODE_IP, config.NET_MASK, config.GATEWAY, config.DNS_SERVER)
+                print('\n Network information:{}'.format(self.get_address()))
                 self.ssid = ssid
                 return True
             else:
@@ -135,13 +137,11 @@ class WifiManager:
         print('\nConnection failed!')
         self.wlan_sta.disconnect()
         return False
-
+    
     def ap_broadcast(self):
 
         
         self.wlan_ap.init(mode =network.WLAN.AP, ssid =self.ap_ssid, auth = (network.WLAN.WPA2, self.ap_password))
-        print("Configuring AP ipV4")
-        self.ipV4_config(config.SERVER_IP, config.NET_MASK, config.GATEWAY, config.DNS_SERVER)
         #Waiting for clients to be connected on the AP
         print("Actvating {} access point on the fipy please wait".format(self.ap_ssid))
         last_print_time = time.time()
@@ -153,8 +153,122 @@ class WifiManager:
             
         self.logger.info("Client connected")
         print("Braodcasting AP signal on {}".format(self.ap_ssid))
-        print(self.wlan_ap.ifconfig())
+        print("\n Network information:{}".format(self.wlan_ap.ifconfig()))
+
+    def open_socket(self, socket_server_ip):
+
+        packet = None
+        client_list = []
+        addr_list = []
+
+        try:    
+            print('ceating socket...')
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.setblocking(False)
+
+            if (self.sock !=None):
+                self.sock.bind((socket_server_ip, 5000))
+                self.sock.listen()
+                while (True):  ######### A Revoir cette condition ######
+                    try :
+                        if client_list :
+                            print('client list not empty')
+                            for client in client_list :
+                                packet = client.recv(1024) 
+                                if packet :
+                                    print('packet set')
+                                    self.read_packet(packet)
+                        else :
+                            print('Linstening to sockets...')
+
+                        
+                        socket_client, client_addr = self.sock.accept()
+
+                        #Gere mal les multiple connexions
+                        if (client_addr) and (client_addr not in addr_list):
+                            print("client connected having {} as IP address ".format(client_addr))
+                            packet = socket_client.recv(1024)
+                            if packet:
+                                self.read_packet(packet)
+                            client_list.append(socket_client)
+                            addr_list.append(client_addr)                 
+                        else:
+                            print("Client not connected yet")
+                            continue
+
+
+                        
+                        
+                        
+                    except Exception as e:
+                        pass
+                    time.sleep(2)
+
+            else:
+                print("SOCK==NONE")
+
+        except:
+            print("exception intry")
+
+    def close_socket(self):
+
+        if self.sock != None:
+            self.sock.close()
+
+    def send_mssg(self, socket_server_ip):
+        print("Sending message via socket")
+        try:
+            
+            sock = socket.socket()
+            print('Connecting to {}'.format(socket_server_ip))
+            sock.connect((socket_server_ip, 5000))
+            while True :
+                msg=str(config.NODE_ID)+"*"+"hello wifi"+str(time.time())
+                sock.send(msg.encode('utf-8'))
+                print("message envoyé contenant : {}".format(msg))
+                time.sleep_ms(3000)
+        except Exception as e:
+
+            print(e)
     
+    def read_packet(self, packet):
+
+        packet_decode = packet.decode('utf-8')
+        packet_decode = packet.decode('utf-8').split("*")
+        sender_id = eval(packet_decode[0])
+        message = packet_decode[1]
+        print("Recieved message from node {} saying : {}".format(sender_id, message))
+
+    def recieve_msg(self):
+        
+        recieved = False
+        while (not recieved):
+            try:
+                        sock = socket.socket()
+                        sock.connect((config.SERVER_IP, 5000))
+                        d = sock.recv(1024)
+                        l=d.decode('utf-8').split("*")
+                        
+                        src_id=eval(l[0])
+                        #print("src_id",src_id)
+                        if(src_id==0):
+                                print("message reçu",d)
+                                recieved = True
+                        else :
+                            print("Not recieved yet ... waiting")
+            except Exception as e :
+                print(e)
+
+    
+    
+
+
+
+
+
+
+
+
     def web_server(self):
         #self.wlan_ap.active(True)
         self.wlan_ap.init(mode =network.WLAN.AP, ssid =self.ap_ssid, auth = (network.WLAN.WPA2, self.ap_password))
@@ -335,77 +449,6 @@ class WifiManager:
 
         self.wlan_sta.ifconfig(config=(ip, subnet, gateway, dns))
 
-    def send_msg(self):
-        print("Sending message via socket")
-        try:
-                    sock = socket.socket()
-                    sock.connect((config.SERVER_IP, 5000))
-                    #print(wlan.ifconfig())
-                    #print("connectee")
-                    msg=str(config.NODE_ID)+"*"+"hello wifi"
-                    sock.send(msg.encode('utf-8'))
-                    print("message envoyé",msg)
-        except Exception as e:
+    
 
-            print(e)
-
-    def open_socket(self):
-
-        packet = None
-        sock = None
-
-        try:    
-            print('ceating socket...')
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print('should block here')
-            sock.setblocking(True)
-
-            if (sock !=None):
-                print('binding...')
-                sock.bind((config.SERVER_IP, 5000))
-                print('listerning...')
-                sock.listen(1)
-                while (True):  ######### A Revoir cette condition ######
-                    print('in while...')
-                    try :
-                        socket_client, client_addr = sock.accept()
-                        if client_addr :
-                            print("client connected having {} as IP address ".format(client_addr))
-                            packet = socket_client.recv(1024)
-                        else:
-                            print("Client not connected yet")
-                            continue
-                        if packet:
-                            packet_decode = packet.decode('utf-8').split("*")
-                            sender_id = eval(packet_decode[0])
-                            message = eval(packet_decode[1])
-                            print("Recieved message from {} saying : {}".format(sender_id, message))
-                    except Exception as e:
-                        print(e)
-                        pass
-
-
-            else:
-                print("SOCK==NONE")
-
-        except:
-            print("exception intry")
-
-    def recieve_msg(self):
-        recieved = False
-        while (not recieved):
-            try:
-                        sock = socket.socket()
-                        sock.connect((config.SERVER_IP, 5000))
-                        d = sock.recv(1024)
-                        l=d.decode('utf-8').split("*")
-                        
-                        src_id=eval(l[0])
-                        #print("src_id",src_id)
-                        if(src_id==1):
-                                print("message reçu",d)
-                                recieved = True
-                        else :
-                            print("Not recieved yet ... waiting")
-            except Exception as e :
-                print(e)
+    

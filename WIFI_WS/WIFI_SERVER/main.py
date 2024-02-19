@@ -2,9 +2,9 @@ import network
 
 
 import socket
+import _thread
 import sys
 import lib.config as configuration
-import lib.config as config
 from lib.pytrack import Pytrack
 
 import time
@@ -16,9 +16,10 @@ from lib.L76GNSS import L76GNSS #Localsiation
 from lib.LIS2HH12 import LIS2HH12 #Accelerometre
 from lib.pycoproc_2 import Pycoproc
 from lib.wifi_manager import WifiManager
+import lib.uping as ping
+from lib.mqtt import MQTTClient
 
-
-node_ip = config.SERVER_IP
+node_ip = "10.2.18.125"
 setup = configuration.Configure(node_ip)
 
 
@@ -46,23 +47,17 @@ setup = configuration.Configure(node_ip)
 #--------------------End Accelerometre-----------------------#
 
 try : 
-    # wlan_sta = network.WLAN(mode=network.WLAN.STA)
-    # wm = WifiManager(ssid = 'WifiManager', password = 'wifimanager')
-    # wm.wifi_connect('OPPO Reno10 5G', 'r3nfqaz6')
-    # wm.ipV4_config(setup.ip_address, configuration.NET_MASK, configuration.GATEWAY, configuration.DNS_SERVER)
-    # print('After config {}'.format(wm.get_address()))
-    # wm.ap_broadcast()
-    # wm.check_status()
 
-    wm = WifiManager()
+    wm = WifiManager(ssid="OPPO", password="123456789azerty")
     wm.ap_broadcast()
-    #wm.open_socket()
-    # wm.recieve_msg()
+    wm.ipV4_config("192.168.4.1", "255.255.255.0", "192.168.4.1", "192.168.4.1")
+    print("\n Network information:{}".format(wm.wlan_ap.ifconfig()))
+    ping.ping("192.168.4.1")
+    print('starting thread for sockets')
+    _thread.start_new_thread(wm.open_socket, ('192.168.4.1',))
+    print("----------Thread started and continueing going to bluetooth--------------")
 
     
-  
-
-
 
 except KeyboardInterrupt:
     print('Interrepted by keyboard')
