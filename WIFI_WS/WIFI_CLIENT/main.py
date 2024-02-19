@@ -4,7 +4,6 @@ import network
 import socket
 import sys
 import lib.config as configuration
-import lib.config as config
 from lib.pytrack import Pytrack
 
 import time
@@ -53,7 +52,7 @@ try :
     ping.ping("192.168.79.245")
     ping.ping("192.168.79.137")
     wm.open_socket('192.168.79.39')
-    #wm.send_mssg()
+    #wm.send_mssg('192.168.79.39')
     
 
     

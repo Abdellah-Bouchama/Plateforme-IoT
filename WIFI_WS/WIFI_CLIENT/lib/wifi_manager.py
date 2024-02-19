@@ -139,37 +139,51 @@ class WifiManager:
 
         packet = None
         sock = None
+        client_list = []
 
         try:    
             print('ceating socket...')
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             print('should block here')
-            sock.setblocking(True)
+            sock.setblocking(False)
 
             if (sock !=None):
-                print('binding...')
                 sock.bind((socket_server_ip, 5000))
-                print('listerning...')
                 sock.listen(1)
                 while (True):  ######### A Revoir cette condition ######
-                    print('in while...')
+                    print('Linstening to sockets...')
                     try :
-                        socket_client, client_addr = sock.accept()
+                        if client_list :
+                            print('client list not empty')
+                            packet = client_list[0].recv(1024) 
+                        else :
+                            socket_client, client_addr = sock.accept()
+
+                        #Gere mal les multiple connexions
                         if client_addr :
                             print("client connected having {} as IP address ".format(client_addr))
                             packet = socket_client.recv(1024)
+                            client_list.append(socket_client)
+                                           
                         else:
                             print("Client not connected yet")
                             continue
-                        if packet:
-                            packet_decode = packet.decode('utf-8').split("*")
-                            sender_id = eval(packet_decode[0])
-                            message = eval(packet_decode[1])
-                            print("Recieved message from {} saying : {}".format(sender_id, message))
-                    except Exception as e:
-                        print(e)
-                        pass
 
+
+                        print('before if packet')
+                        if packet:
+                            packet_decode = packet.decode('utf-8')
+                            print(packet_decode)
+                            packet_decode = packet.decode('utf-8').split("*")
+                            print(packet_decode)
+                            sender_id = eval(packet_decode[0])
+                            message = packet_decode[1]
+                            print("Recieved message from {} saying : {}".format(sender_id, message))
+                        
+                        
+                    except Exception as e:
+                        pass
+                    time.sleep(2)
 
             else:
                 print("SOCK==NONE")
@@ -376,20 +390,18 @@ class WifiManager:
 
     
 
-    def send_mssg(self, socketIP):
+    def send_mssg(self, socket_server_ip):
         print("Sending message via socket")
         try:
-                    print('1')
-                    sock = socket.socket()
-                    print('Connecting to {}'.format(socketIP))
-                    sock.connect(('192.168.79.39', 5000))
-                    print('1')
-                    #print(wlan.ifconfig())
-                    #print("connectee")
-                    msg=str(config.NODE_ID)+"*"+"hello wifi"
-                    print('1')
-                    sock.send(msg.encode('utf-8'))
-                    print("message envoyé",msg)
+            
+            sock = socket.socket()
+            print('Connecting to {}'.format(socket_server_ip))
+            sock.connect((socket_server_ip, 5000))
+            while True :
+                msg=str(config.NODE_ID)+"*"+"hello wifi"
+                sock.send(msg.encode('utf-8'))
+                print("message envoyé",msg)
+                time.sleep_ms(3000)
         except Exception as e:
 
             print(e)
