@@ -2,6 +2,7 @@ import network
 
 
 import socket
+import _thread
 import sys
 import lib.config as configuration
 from lib.pytrack import Pytrack
@@ -17,6 +18,7 @@ from lib.pycoproc_2 import Pycoproc
 from lib.wifi_manager import WifiManager
 import lib.wifi_manager as wifi_manager
 import lib.uping as ping
+from lib.mqtt import MQTTClient
 
 node_ip = "10.2.18.125"
 setup = configuration.Configure(node_ip)
@@ -48,16 +50,18 @@ setup = configuration.Configure(node_ip)
 try : 
 
     wm = WifiManager(ssid="OPPO", password="123456789azerty")
+    #wm.ap_broadcast()
+    #wm.ipV4_config("192.168.4.1", "255.255.255.0", "192.168.4.1", "192.168.4.1")
     wm.wifi_connect(ssid="OPPO", password="123456789azerty", timeout=14)
-    ping.ping("192.168.79.245")
-    ping.ping("192.168.79.137")
-    wm.open_socket('192.168.79.39')
-    #wm.send_mssg('192.168.79.39')
-    
-
-    
-  
-
+    print("\n Network information:{}".format(wm.wlan_ap.ifconfig()))
+    ping.ping("192.168.4.1")
+    print('starting thread for sockets')
+    #_thread.start_new_thread(wm.open_socket, ('192.168.4.1',))
+    _thread.start_new_thread(wm.send_mssg, ('192.168.4.1',))
+    print("----------Thread started and continueing--------------")
+    client = MQTTClient("client_id", "10.2.29.145", port=1883, user=None, password=None, keepalive = 50000 , ssl=False, ssl_params={})
+    #client = MQTTClient("client_id", SERVER_IP, port=1883, user=None, password=None, keepalive = 500 , ssl=False, ssl_params={})
+    client.connect()
 
 
 except KeyboardInterrupt:
